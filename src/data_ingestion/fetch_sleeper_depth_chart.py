@@ -30,15 +30,20 @@ depth_chart_df = depth_chart_df.merge(players_query, how='left', on='name')
 # Drop rows where we are missing player_id or team_id because those are required for our schema
 final_df = depth_chart_df[['player_id', 'team_id', 'position', 'depth_position']].copy()
 
-# Drop rows where player_id or team_id is None or NaN
+# Drop rows where player_id or team_id is string 'None'
+final_df = final_df[(final_df['player_id'] != 'None') & (final_df['team_id'] != 'None')]
+
+# Drop rows where player_id or team_id is NaN
 final_df = final_df.dropna(subset=['player_id', 'team_id'])
 
-# Ensure integers (Postgres needs int, not float from pandas NaNs)
+# Ensure player_id and team_id are integers
 final_df['player_id'] = final_df['player_id'].astype(int)
 final_df['team_id'] = final_df['team_id'].astype(int)
 
-# Depth position can be null, keep as is or fill with 0 if needed
+# Clean depth_position
+final_df['depth_position'] = final_df['depth_position'].replace('None', pd.NA)
 final_df['depth_position'] = final_df['depth_position'].fillna(0)
+final_df['depth_position'] = final_df['depth_position'].astype(str)
 
 final_df.to_sql('depth_chart', engine, if_exists='replace', index=False)
 print("✅ Depth chart ingested into PostgreSQL.")

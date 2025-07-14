@@ -25,3 +25,4 @@ def initialize_postgres_schema(sql_file_path: str):
 if __name__ == "__main__":
     sql_file = 'data/postgres_init.sql'
     initialize_postgres_schema(sql_file)
+    

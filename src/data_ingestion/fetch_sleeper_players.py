@@ -46,7 +46,7 @@ teams_data = [
     {"name": "Tennessee Titans", "abbreviation": "TEN"},
     {"name": "Washington Commanders", "abbreviation": "WAS"}
 ]
-teams_df = pd.DataFrame(teams_data)
+teams_df = pd.DataFrame(teams_data).reset_index().rename(columns = {'index':'team_id'})
 teams_df.to_sql('teams', engine, if_exists='append', index=False)
 print("✅ Teams ingested into PostgreSQL.")
 
@@ -70,8 +70,8 @@ df = df[df['name'].notnull() & df['position'].notnull()]
 teams_query = pd.read_sql('SELECT team_id, abbreviation FROM teams', engine)
 df = df.merge(teams_query, how='left', left_on='team', right_on='abbreviation')
 
-df = df[['name', 'position', 'team_id', 'birthdate']]
+df = df[['name', 'position', 'team_id', 'birthdate']].reset_index().rename(columns = {'index': 'player_id'})
 
 # Write to Postgres
-df.to_sql('players', engine, if_exists='append', index=False)
+df.to_sql('players', engine, if_exists='replace', index=False)
 print("✅ Sleeper players ingested into PostgreSQL.")

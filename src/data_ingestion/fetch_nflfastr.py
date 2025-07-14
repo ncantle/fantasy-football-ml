@@ -78,5 +78,5 @@ final_df = merged_df[merged_df['player_id'].notnull()]
 final_df = final_df[['player_id', 'season', 'week', 'passing_yards', 'rushing_yards', 'receiving_yards', 'touchdowns', 'fantasy_points']]
 
 # --- Insert into Postgres ---
-final_df.to_sql('weekly_stats', engine, if_exists='append', index=False)
+final_df.to_sql('weekly_stats', engine, if_exists='replace', index=False)
 print(f"✅ {len(final_df)} rows successfully ingested into `weekly_stats`.")

@@ -1,3 +1,16 @@
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+DATABASE_URL = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+
+# Connect to Postgres
+engine = create_engine(DATABASE_URL)
+
+# Schema SQL
+schema_sql = """
 -- Drop tables in dependency order for safe resets
 DROP TABLE IF EXISTS weekly_stats;
 DROP TABLE IF EXISTS depth_chart;
@@ -59,3 +72,9 @@ CREATE TABLE weekly_stats (
     fantasy_points FLOAT,
     PRIMARY KEY (player_id, season, week)
 );
+"""
+
+# Execute the schema reset
+with engine.connect() as conn:
+    conn.execute(text(schema_sql))
+    print("✅ PostgreSQL schema has been reset and re-created.")
