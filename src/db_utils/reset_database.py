@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS depth_chart;
 DROP TABLE IF EXISTS injuries;
 DROP TABLE IF EXISTS players;
 DROP TABLE IF EXISTS teams;
+DROP TABLE IF EXISTS games;
 
 -- ---------------------------
 -- Teams Table
@@ -71,6 +72,32 @@ CREATE TABLE weekly_stats (
     touchdowns FLOAT,
     fantasy_points FLOAT,
     PRIMARY KEY (player_id, season, week)
+);
+
+-- ---------------------------
+-- Games Table
+-- ---------------------------
+CREATE TABLE games (
+    game_id SERIAL PRIMARY KEY,
+    season INT,
+    week INT,
+    home_team_id INT REFERENCES teams(team_id),
+    away_team_id INT REFERENCES teams(team_id)
+);
+
+-- ---------------------------
+-- Weekly Stats Table (for fantasy points, targets, carries, snaps)
+-- ---------------------------
+CREATE TABLE IF NOT EXISTS weekly_stats (
+    weekly_stats_id SERIAL PRIMARY KEY,
+    player_id INT REFERENCES players(player_id),
+    team_id INT REFERENCES teams(team_id),
+    season INT NOT NULL,
+    week INT NOT NULL,
+    fantasy_points FLOAT,
+    targets INT,
+    carries INT,
+    snaps INT
 );
 """
 

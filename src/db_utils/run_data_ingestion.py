@@ -11,7 +11,10 @@ INGESTION_SCRIPTS = [
     "src/data_ingestion/fetch_sleeper_players.py",
     "src/data_ingestion/fetch_sleeper_depth_chart.py",
     "src/data_ingestion/fetch_nflfastr.py",
-    "src/data_ingestion/fetch_sleeper_injuries.py"  # If exists
+    "src/data_ingestion/fetch_sleeper_injuries.py",
+    "src/data_ingestion/fetch_schedule.py",
+    "src/data_ingestion/export_player_weekly_stats.py"
+    ""
 ]
 
 def run_script(script_path):
