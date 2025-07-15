@@ -1,6 +1,7 @@
 import subprocess
 import os
 import argparse
+import tqdm.notebook as tqdm
 from dotenv import load_dotenv
 
 # Load .env for DB credentials
@@ -13,7 +14,8 @@ INGESTION_SCRIPTS = [
     "src/data_ingestion/fetch_nflfastr.py",
     "src/data_ingestion/fetch_sleeper_injuries.py",
     "src/data_ingestion/fetch_schedule.py",
-    "src/data_ingestion/export_player_weekly_stats.py"
+    "src/data_ingestion/export_player_weekly_stats.py",
+    "src/data_ingestion/fetch_weather.py"
     ""
 ]
 

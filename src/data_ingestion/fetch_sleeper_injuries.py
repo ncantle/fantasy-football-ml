@@ -31,5 +31,5 @@ final_df = injury_df[['player_id', 'season', 'week', 'injury_status']].copy()
 final_df = final_df.dropna(subset=['player_id'])
 
 # Save to PostgreSQL
-final_df.to_sql('injuries', engine, if_exists='replace', index=False)
+final_df.drop_duplicates().to_sql('injuries', engine, if_exists='replace', index=False)
 print("✅ Injuries ingested into PostgreSQL.")

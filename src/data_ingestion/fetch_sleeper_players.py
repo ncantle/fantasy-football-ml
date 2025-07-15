@@ -73,5 +73,5 @@ df = df.merge(teams_query, how='left', left_on='team', right_on='abbreviation')
 df = df[['name', 'position', 'team_id', 'birthdate']].reset_index().rename(columns = {'index': 'player_id'})
 
 # Write to Postgres
-df.to_sql('players', engine, if_exists='replace', index=False)
+df.drop_duplicates().to_sql('players', engine, if_exists='replace', index=False)
 print("✅ Sleeper players ingested into PostgreSQL.")

@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS depth_chart;
 DROP TABLE IF EXISTS injuries;
 DROP TABLE IF EXISTS players;
 DROP TABLE IF EXISTS teams;
+DROP TABLE IF EXISTS games;
+DROP TABLE IF EXISTS weather;
 
 -- ---------------------------
 -- Teams Table
@@ -46,30 +48,20 @@ CREATE TABLE injuries (
 );
 
 -- ---------------------------
--- Weekly Stats Table
--- ---------------------------
-CREATE TABLE weekly_stats (
-    player_id INT REFERENCES players(player_id),
-    season INT NOT NULL,
-    week INT NOT NULL,
-    passing_yards FLOAT,
-    rushing_yards FLOAT,
-    receiving_yards FLOAT,
-    touchdowns FLOAT,
-    fantasy_points FLOAT,
-    PRIMARY KEY (player_id, season, week)
-);
-
--- ---------------------------
 -- Games Table
 -- ---------------------------
 CREATE TABLE games (
     game_id SERIAL PRIMARY KEY,
     season INT,
     week INT,
+    home_team VARCHAR(50),
+    away_team VARCHAR(50),
+    stadium VARCHAR(100),
+    game_date DATE,
     home_team_id INT REFERENCES teams(team_id),
-    away_team_id INT REFERENCES teams(team_id)
+    away_team_id INT REFERENCES teams(team_id),
 );
+
 
 -- ---------------------------
 -- Weekly Stats Table (for fantasy points, targets, carries, snaps)
@@ -82,6 +74,19 @@ CREATE TABLE IF NOT EXISTS weekly_stats (
     week INT NOT NULL,
     fantasy_points FLOAT,
     targets INT,
-    carries INT,
-    snaps INT
+    carries INT
+);
+
+-- ---------------------------
+-- Weather Table
+-- ---------------------------
+CREATE TABLE IF NOT EXISTS weather (
+    weather_id SERIAL PRIMARY KEY,
+    season INT,
+    week INT,
+    stadium VARCHAR,
+    temperature FLOAT,
+    precipitation FLOAT,
+    wind_speed FLOAT,
+    dome BOOLEAN
 );

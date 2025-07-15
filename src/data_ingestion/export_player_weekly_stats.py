@@ -75,6 +75,6 @@ ORDER BY ws.season, ws.week, p.name;
 
 # Execute query and export
 df = pd.read_sql(query, engine).drop_duplicates()
-df.to_csv("data/processed/player_weekly_stats.csv", index=False)
+df.drop_duplicates().to_csv("data/processed/player_weekly_stats.csv", index=False)
 
 print("✅ Exported to data/processed/player_weekly_stats.csv")
