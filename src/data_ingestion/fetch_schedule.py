@@ -9,12 +9,11 @@ import time
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
 
-
 DATABASE_URL = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 engine = create_engine(DATABASE_URL)
 
-# Main NFL events URL
-base_url = "https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/2025/types/2/events?limit=1000"
+week_cache = {}
+team_cache = {}
 
 def fetch_json(url):
     try:
@@ -24,14 +23,8 @@ def fetch_json(url):
     except Exception as e:
         logging.error(f"Failed to fetch {url}: {e}")
         return None
-    
-week_cache = {}
+
 def fetch_week_number(week_obj):
-    """
-    Given a week object, either with number or a $ref URL,
-    return the week number as int.
-    Uses week_cache to avoid redundant requests.
-    """
     if isinstance(week_obj, dict):
         if 'number' in week_obj:
             return int(week_obj['number'])
@@ -51,16 +44,9 @@ def fetch_week_number(week_obj):
                 return None
     elif isinstance(week_obj, int):
         return week_obj
-    else:
-        return None
+    return None
 
-team_cache = {}
 def fetch_team_abbreviation(team_obj):
-    """
-    Given a team object, either with abbreviation or a $ref URL,
-    return the abbreviation string.
-    Uses team_cache to avoid redundant requests.
-    """
     if 'abbreviation' in team_obj:
         return team_obj['abbreviation']
     elif '$ref' in team_obj:
@@ -75,16 +61,11 @@ def fetch_team_abbreviation(team_obj):
             if abbreviation:
                 team_cache[ref_url] = abbreviation
                 return abbreviation
-            else:
-                logging.warning(f"No abbreviation found in team data at {ref_url}")
-                return None
         except Exception as e:
             logging.error(f"Failed to fetch team data from {ref_url}: {e}")
-            return None
-    else:
-        return None
+    return None
 
-def parse_event(event):
+def parse_event(event, season):
     try:
         competitions = event.get('competitions', [])
         if not competitions:
@@ -94,8 +75,7 @@ def parse_event(event):
         if len(competitors) != 2:
             return None
 
-        home_team = None
-        away_team = None
+        home_team, away_team = None, None
         for team in competitors:
             team_obj = team.get('team', {})
             abbreviation = fetch_team_abbreviation(team_obj)
@@ -109,11 +89,7 @@ def parse_event(event):
 
         venue = comp.get('venue', {}).get('fullName')
         game_date = event.get('date', '').split('T')[0]
-
-        week_obj = event.get('week')
-        week = fetch_week_number(week_obj)
-        
-        season = 2025
+        week = fetch_week_number(event.get('week'))
 
         if not home_team or not away_team or not game_date:
             logging.warning(f"Incomplete event data: home_team={home_team}, away_team={away_team}, date={game_date}")
@@ -131,7 +107,8 @@ def parse_event(event):
         logging.error(f"Error parsing event: {e}")
         return None
 
-def main():
+def fetch_and_store_schedule(season: int, engine):
+    base_url = f"https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/{season}/types/2/events?limit=1000"
     data = fetch_json(base_url)
     if not data:
         logging.error("No data found at main URL")
@@ -150,13 +127,11 @@ def main():
         if not event_data:
             continue
 
-        parsed = parse_event(event_data)
+        parsed = parse_event(event_data, season)
         if parsed:
             games.append(parsed)
 
-        # Be kind to ESPN's servers
         time.sleep(0.1)
-
         if idx % 10 == 0:
             logging.info(f"Processed {idx+1} / {len(items)} events")
 
@@ -165,14 +140,16 @@ def main():
         return
 
     df = pd.DataFrame(games)
-
     teams_df = pd.read_sql('SELECT team_id, abbreviation FROM teams', engine)
-    df = df.merge(teams_df, how = 'left', left_on = 'home_team', right_on = 'abbreviation').rename(columns = {'team_id':'home_team_id'}).drop(columns = ['abbreviation'])
-    df = df.merge(teams_df, how = 'left', left_on = 'away_team', right_on = 'abbreviation').rename(columns = {'team_id':'away_team_id'}).drop(columns = ['abbreviation'])
-    df
+    df = df.merge(teams_df, how='left', left_on='home_team', right_on='abbreviation') \
+           .rename(columns={'team_id': 'home_team_id'}).drop(columns=['abbreviation'])
+    df = df.merge(teams_df, how='left', left_on='away_team', right_on='abbreviation') \
+           .rename(columns={'team_id': 'away_team_id'}).drop(columns=['abbreviation'])
 
-    df.drop_duplicates().to_sql('games', engine, if_exists='replace', index=False)
+    df.drop_duplicates().to_sql('games', engine, if_exists='append', index=False)
     logging.info("✅ NFL schedule ingested successfully.")
 
-if __name__ == "__main__":
-    main()
+def fetch_schedule_for_seasons(start_year: int, end_year: int, engine):
+    for season in range(start_year, end_year + 1):
+        logging.info(f"\nIngesting schedule for season {season}")
+        fetch_and_store_schedule(season, engine)
