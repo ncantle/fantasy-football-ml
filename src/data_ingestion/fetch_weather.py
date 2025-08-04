@@ -5,6 +5,7 @@ import os
 import requests
 
 def fetch_weather(engine):
+    print('Fetching weather...')
     API_KEY = os.getenv('VISUAL_CROSSING_API_KEY')
 
     # Stadium → Location mapping

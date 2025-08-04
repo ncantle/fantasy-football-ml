@@ -1,7 +1,6 @@
 import subprocess
 import os
 import argparse
-import tqdm.notebook as tqdm
 import pandas as pd
 import requests
 from sqlalchemy import create_engine
@@ -25,13 +24,13 @@ def main(reset_db=False):
     if reset_db:
         reset_database(engine)
 
-    fetch_sleeper_players(engine)
-    fetch_sleeper_depth_chart(engine)
-    fetch_nflfastr(start_year = 2021, end_year = 2025, engine = engine)
-    fetch_sleeper_injuries(engine)
-    fetch_schedule_for_seasons(start_year=2021, end_year=2025, engine=engine)
-    fetch_and_store_weekly_stats(engine, start_year=2021, end_year=2025, parquet_folder = 'data/raw/nflfastr/')
-    fetch_weather(engine)
+    # fetch_sleeper_players(engine)
+    # fetch_sleeper_depth_chart(engine)
+    fetch_nflfastr(start_year = 2024, end_year = 2024, engine = engine)
+    # fetch_sleeper_injuries(engine)
+    # fetch_schedule_for_seasons(start_year=2024, end_year=2025, engine=engine)
+    fetch_and_store_weekly_stats(engine, start_year=2024, end_year=2024, parquet_folder = 'data/raw/nflfastr/')
+    # fetch_weather(engine)
     print("Data ingestion pipeline completed successfully!")
 
 if __name__ == "__main__":
