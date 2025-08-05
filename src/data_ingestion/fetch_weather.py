@@ -91,5 +91,6 @@ def fetch_weather(engine):
 
     # Ingest into DB
     weather_df = pd.DataFrame(weather_records)
-    weather_df.drop_duplicates().to_sql('weather', engine, if_exists='replace', index=False)
+    weather_df = weather_df.drop_duplicates().reset_index(drop=True)
+    weather_df.to_sql('weather', engine, if_exists='replace', index=False)
     print("Weather data ingested into PostgreSQL.")

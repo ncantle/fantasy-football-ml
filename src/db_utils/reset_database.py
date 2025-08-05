@@ -89,13 +89,24 @@ def reset_database(engine):
     -- ---------------------------
     CREATE TABLE IF NOT EXISTS weekly_stats (
         weekly_stats_id SERIAL PRIMARY KEY,
-        player_id INT REFERENCES players(player_id),
-        team_id INT REFERENCES teams(team_id),
-        season INT NOT NULL,
-        week INT NOT NULL,
-        fantasy_points FLOAT,
+        player_name VARCHAR NOT NULL,
+        player_display_name VARCHAR,
+        position VARCHAR(10),
+        team_abbreviation VARCHAR(10) NOT NULL,
+        opponent_team VARCHAR(10),
+        attempts INT,
+        completions INT,
+        passing_yards FLOAT,
+        passing_tds INT,
         targets INT,
-        carries INT
+        receptions INT,
+        carries INT,
+        rushing_yards FLOAT,
+        rushing_tds INT,
+        receiving_yards FLOAT,
+        receiving_tds INT,
+        target_share FLOAT,
+        fantasy_points FLOAT
     );
 
     -- ---------------------------

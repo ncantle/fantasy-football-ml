@@ -40,7 +40,7 @@ def fetch_sleeper_players(engine):
         {"name": "Tennessee Titans", "abbreviation": "TEN"},
         {"name": "Washington Commanders", "abbreviation": "WAS"}
     ]
-    teams_df = pd.DataFrame(teams_data).reset_index().rename(columns = {'index':'team_id'})
+    teams_df = pd.DataFrame(teams_data).drop_duplicates().reset_index().rename(columns = {'index':'team_id'})
     teams_df.to_sql('teams', engine, if_exists='append', index=False)
     print("Teams ingested into PostgreSQL.")
 

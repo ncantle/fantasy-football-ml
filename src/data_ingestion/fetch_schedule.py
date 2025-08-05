@@ -145,9 +145,11 @@ def fetch_and_store_schedule(season: int, engine):
            .rename(columns={'team_id': 'home_team_id'}).drop(columns=['abbreviation'])
     df = df.merge(teams_df, how='left', left_on='away_team', right_on='abbreviation') \
            .rename(columns={'team_id': 'away_team_id'}).drop(columns=['abbreviation'])
+    
+    df = df.drop_duplicates()
 
-    df.drop_duplicates().to_sql('games', engine, if_exists='append', index=False)
-    logging.info("✅ NFL schedule ingested successfully.")
+    df.to_sql('games', engine, if_exists='append', index=False)
+    logging.info("NFL schedule ingested successfully.")
 
 def fetch_schedule_for_seasons(start_year: int, end_year: int, engine):
     for season in range(start_year, end_year + 1):

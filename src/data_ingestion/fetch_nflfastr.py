@@ -72,8 +72,8 @@ def fetch_nflfastr(start_year: int, end_year: int, engine):
     final_df = merged_df[merged_df['player_id'].notnull()]
 
     # --- Prepare for Postgres insert ---
-    final_df = final_df[['player_id', 'season', 'week', 'passing_yards', 'rushing_yards', 'receiving_yards', 'touchdowns', 'fantasy_points']]
+    final_df = final_df[['player_id', 'season', 'week', 'passing_yards', 'rushing_yards', 'receiving_yards', 'touchdowns', 'fantasy_points']].drop_duplicates().reset_index(drop = True)
 
     # --- Insert into Postgres ---
-    final_df.drop_duplicates().to_sql('weekly_stats', engine, if_exists='replace', index=False)
+    final_df.to_sql('weekly_stats', engine, if_exists='replace', index=False)
     print(f"{len(final_df)} rows successfully ingested into `weekly_stats`.")

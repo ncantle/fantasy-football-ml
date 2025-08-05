@@ -41,6 +41,7 @@ def fetch_sleeper_depth_chart(engine):
     final_df['depth_position'] = final_df['depth_position'].replace('None', pd.NA)
     final_df['depth_position'] = final_df['depth_position'].fillna(0)
     final_df['depth_position'] = final_df['depth_position'].astype(str)
+    final_df = final_df.drop_duplicates().reset_index(drop=True)
 
-    final_df.drop_duplicates().to_sql('depth_chart', engine, if_exists='replace', index=False)
+    final_df.to_sql('depth_chart', engine, if_exists='replace', index=False)
     print("Depth chart ingested into PostgreSQL.")

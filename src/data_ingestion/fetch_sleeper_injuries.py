@@ -25,7 +25,8 @@ def fetch_sleeper_injuries(engine):
     # Select and rename columns for PostgreSQL
     final_df = injury_df[['player_id', 'season', 'week', 'injury_status']].copy()
     final_df = final_df.dropna(subset=['player_id'])
+    final_df = final_df.drop_duplicates().reset_index(drop=True)
 
     # Save to PostgreSQL
-    final_df.drop_duplicates().to_sql('injuries', engine, if_exists='replace', index=False)
+    final_df.to_sql('injuries', engine, if_exists='replace', index=False)
     print("Injuries ingested into PostgreSQL.")
