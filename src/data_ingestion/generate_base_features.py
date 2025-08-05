@@ -1,8 +1,8 @@
 import pandas as pd
 import logging
 
+#### INCORPORATE WEATHER FEATURES
 def generate_base_features(engine):
-    # --- Create filtered materialized views ---
     weekly_stats_df = pd.read_sql('SELECT * FROM weekly_stats', engine)
     weather_df = pd.read_sql('SELECT * FROM weather', engine)
     weekly_stats_features = weekly_stats_df[['player_id',
