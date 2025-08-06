@@ -38,7 +38,7 @@ def main(start_year = datetime.datetime.now().year - 4, end_year = datetime.date
     if fetch_weather_historic:
         fetch_weather_historic(engine)
 
-    generate_base_features(engine)
+    
 
     print("Data ingestion pipeline completed successfully!")
 

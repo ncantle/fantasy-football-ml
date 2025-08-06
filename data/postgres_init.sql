@@ -6,6 +6,8 @@ DROP TABLE IF EXISTS players;
 DROP TABLE IF EXISTS teams;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS weather;
+DROP TABLE IF EXISTS player_weekly_features;
+DROP TABLE IF EXISTS offensive_line_rankings;
 
 -- ---------------------------
 -- Teams Table
@@ -100,4 +102,18 @@ CREATE TABLE IF NOT EXISTS weather (
     precipitation FLOAT,
     wind_speed FLOAT,
     dome BOOLEAN
+);
+
+-- ---------------------------
+-- Offensive Line Rankings Table
+-- ---------------------------
+CREATE TABLE offensive_line_rankings (
+    season INT,
+    week INT,
+    team_id INT,
+    run_block_rank INT,
+    pass_block_rank INT,
+    overall_rank INT,
+    source TEXT,
+    UNIQUE (season, week, team_id)
 );

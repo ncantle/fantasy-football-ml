@@ -122,6 +122,20 @@ def reset_database(engine):
         wind_speed FLOAT,
         dome BOOLEAN
     );
+
+    -- ---------------------------
+    -- Offensive Line Rankings Table
+    -- ---------------------------
+    CREATE TABLE offensive_line_rankings (
+        season INT,
+        week INT,
+        team_id INT,
+        run_block_rank INT,
+        pass_block_rank INT,
+        overall_rank INT,
+        source TEXT,
+        UNIQUE (season, week, team_id)
+    );
     """
 
     # Execute the schema reset

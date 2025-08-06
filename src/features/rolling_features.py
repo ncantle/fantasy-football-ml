@@ -19,7 +19,6 @@ def add_season_to_date_aggregates(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-
 def add_3wk_rolling_averages(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds 3-week rolling averages (excluding current week) for fantasy points, targets, and carries.
