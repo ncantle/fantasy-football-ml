@@ -136,6 +136,18 @@ def reset_database(engine):
         source TEXT,
         UNIQUE (season, week, team_id)
     );
+
+    -- ---------------------------
+    -- Defensive Unit Rankings Table
+    -- ---------------------------
+    CREATE TABLE defensive_unit_rankings (
+        season INTEGER,
+        team_id INTEGER,
+        front_seven_score FLOAT,
+        secondary_score FLOAT,
+        source TEXT,
+        UNIQUE(season, team_id)
+        );
     """
 
     # Execute the schema reset

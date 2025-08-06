@@ -4,78 +4,49 @@ from sqlalchemy import create_engine
 from dotenv import load_dotenv
 import os
 
-def add_home_away_rolling_and_std_averages(df: pd.DataFrame, window: int = 3) -> pd.DataFrame:
+def add_home_away_rolling_and_std_averages(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Adds rolling averages for fantasy_points, targets, and carries separated by home and away games.
+    Adds rolling and season-to-date averages split by home/away games.
+    Relies on an existing `home_game` column in df.
     """
-    # Load credentials and connect to DB
-    load_dotenv()
-    DATABASE_URL = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
-    engine = create_engine(DATABASE_URL)
-
-    # Load games and teams from Postgres
-    games_df = pd.read_sql("SELECT season, week, home_team, away_team FROM games", engine)
-    teams_df = pd.read_sql("SELECT team_id, abbreviation FROM teams", engine)
-
-    # Add home/away team IDs
-    games_df = games_df.merge(teams_df, how='left', left_on='home_team', right_on='abbreviation')\
-                       .rename(columns={'team_id': 'home_team_id'})\
-                       .drop(columns='abbreviation')
-    games_df = games_df.merge(teams_df, how='left', left_on='away_team', right_on='abbreviation')\
-                       .rename(columns={'team_id': 'away_team_id'})\
-                       .drop(columns='abbreviation')
-
-    # Merge into main df
-    df = df.merge(games_df[['season', 'week', 'home_team_id', 'away_team_id']], on=['season', 'week'], how='left')
-
-    # Tag home/away
-    df['home_away'] = np.where(df['team_id'] == df['home_team_id'], 'home', 'away')
-
+    print('Adding home/away rolling and std averages...')
+    df = df.copy()
+    df["week"] = df["week"].astype(int)
     df = df.sort_values(by=['player_id', 'season', 'week'])
 
-    # Initialize list to collect results
-    results = []
+    stats = [
+        'fantasy_points', 'targets', 'carries',
+        'passing_yards', 'rushing_yards', 'receiving_yards',
+        'passing_tds', 'rushing_tds', 'receiving_tds'
+    ]
+    rolling_windows = [3, 5]
 
-    # For each home/away type, compute rolling stats
-    for side in ['home', 'away']:
-        side_df = df[df['home_away'] == side].copy()
-
-        # We'll track keys for merge later
-        keys = ['season', 'week', 'player_id']
-
-        for stat in ['fantasy_points', 'targets', 'carries']:
-            col_name = f'{stat}_{side}_avg'
-
-            # Calculate the rolling average and align indexes
-            side_df[col_name] = (
-                side_df
-                .groupby('player_id')[stat]
-                .transform(lambda x: x.shift(1).rolling(window=window, min_periods=1).mean())
-            )
-
-        results.append(side_df[keys + [f'{s}_{side}_avg' for s in ['fantasy_points', 'targets', 'carries']]])
-
-    # Merge the rolling stats back in
-    for result in results:
-        df = df.merge(result, on=['season', 'week', 'player_id'], how='left')
-
-        # Compute season-to-date home/away averages
-    for side in ['home', 'away']:
-        side_df = df[df['home_away'] == side].copy()
+    for side, flag in [('home', True), ('away', False)]:
+        side_df = df[df['home_game'] == flag].copy()
         side_df = side_df.sort_values(by=['player_id', 'season', 'week'])
 
-        for stat in ['fantasy_points', 'targets', 'carries']:
-            col_name = f'{stat}_{side}_std_avg'
+        # Rolling averages
+        for window in rolling_windows:
+            for stat in stats:
+                col_name = f'{stat}_{side}_avg_{window}wk'
+                side_df[col_name] = (
+                    side_df
+                    .groupby(['player_id', 'season'])[stat]
+                    .transform(lambda x: x.shift(1).rolling(window=window, min_periods=window).mean())
+                )
 
-            # Cumulative mean excluding current row
+        # Season-to-date averages
+        for stat in stats:
+            col_name = f'{stat}_{side}_std_avg'
             side_df[col_name] = (
                 side_df
                 .groupby(['player_id', 'season'])[stat]
                 .transform(lambda x: x.shift(1).expanding().mean())
             )
 
-        # Merge back into main df
-        std_cols = ['season', 'week', 'player_id'] + [f'{s}_{side}_std_avg' for s in ['fantasy_points', 'targets', 'carries']]
-        df = df.merge(side_df[std_cols], on=['season', 'week', 'player_id'], how='left')
+        # Merge newly created columns back to main df
+        merge_cols = ['season', 'week', 'player_id']
+        added_cols = [col for col in side_df.columns if col not in df.columns and col not in merge_cols]
+        df = df.merge(side_df[merge_cols + added_cols], on=merge_cols, how='left')
 
     return df
