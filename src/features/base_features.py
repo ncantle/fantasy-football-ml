@@ -3,14 +3,14 @@ import logging
 import os
 from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from src.features.pass_rush_rate import generate_pass_rush_rate_features
+from src.features.weather_features import generate_weather_features
+from src.features.opportunity_share_with_rolling import generate_opportunity_share_features
 
 def generate_base_features(engine):
     logging.info("Generating base feature table.")
 
     weekly_stats_df = pd.read_sql('SELECT * FROM weekly_stats', engine)
-    games_df = pd.read_sql('SELECT * FROM games', engine)
-    weather_df = pd.read_sql('SELECT * FROM weather', engine)
-    
     weekly_stats_features = weekly_stats_df[['player_id',
                     'player_name',
                     'player_display_name',
@@ -33,35 +33,13 @@ def generate_base_features(engine):
                     'target_share',
                     'fantasy_points']].sort_values(by = ['player_name','season','week']).drop_duplicates().reset_index(drop = True)
 
-    # Adding weather data to base feature table
-    player_games = weekly_stats_features.merge(
-        games_df,
-        how = 'left',
-        on = ['season', 'week']
-    )
+    final_df = generate_weather_features(weekly_stats_features, engine)
+    final_df = generate_pass_rush_rate_features(final_df)
+    final_df = generate_opportunity_share_features(final_df)
 
-    # Filter rows where team_abbreviation matches either home or away team
-    player_games = player_games[
-        (player_games['team_abbreviation'] == player_games['home_team']) |
-        (player_games['team_abbreviation'] == player_games['away_team'])
-    ]
-
-    player_games_with_weather = player_games.merge(
-        weather_df,
-        how = 'left',
-        on = ['season', 'week', 'stadium']
-    )
-
-    player_games_with_weather['home_game'] = (
-        player_games_with_weather['team_abbreviation'] == player_games_with_weather['home_team']
-    )
-
-    final_df = player_games_with_weather[
-        weekly_stats_features.columns.tolist() + ['stadium', 'temperature', 'precipitation', 'wind_speed', 'dome', 'home_game']
-    ].drop_duplicates().reset_index(drop = True)
-    
     final_df.to_sql('player_weekly_features', engine, if_exists='replace', index=False)
     logging.info("Base feature table created and stored.")
+    
     return final_df
 
 if __name__ == "__main__":
