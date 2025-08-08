@@ -8,7 +8,7 @@ from src.features.weather_features import generate_weather_features
 from src.features.opportunity_share_with_rolling import generate_opportunity_share_features
 
 def generate_base_features(engine):
-    logging.info("Generating base feature table.")
+    print("Generating base feature table.")
 
     weekly_stats_df = pd.read_sql('SELECT * FROM weekly_stats', engine)
     weekly_stats_features = weekly_stats_df[['player_id',
@@ -37,9 +37,15 @@ def generate_base_features(engine):
     final_df = generate_pass_rush_rate_features(final_df)
     final_df = generate_opportunity_share_features(final_df)
 
+    final_df["career_avg_fantasy_points"] = (
+        final_df.groupby("player_id")["fantasy_points"]
+        .apply(lambda x: x.shift(1).expanding().mean())
+        .reset_index(drop=True)
+    )
+
     final_df.to_sql('player_weekly_features', engine, if_exists='replace', index=False)
     logging.info("Base feature table created and stored.")
-    
+
     return final_df
 
 if __name__ == "__main__":

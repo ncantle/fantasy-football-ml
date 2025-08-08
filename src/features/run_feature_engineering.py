@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from src.features.rolling_features import add_season_to_date_aggregates, add_3wk_rolling_averages, add_5wk_rolling_averages
 from src.features.home_away_features import add_home_away_rolling_and_std_averages
 from src.features.base_features import generate_base_features
+from src.features.opponent_avg_fantasy_points import generate_opponent_avg_fantasy_points, generate_opponent_avg_fantasy_points_with_rolling
+from src.features.split_features_by_position import split_features_by_position
 
 def main():
     logging.info('Running feature engineering pipeline...')
@@ -18,11 +20,16 @@ def main():
     df = add_3wk_rolling_averages(df)
     df = add_5wk_rolling_averages(df)
     df = add_home_away_rolling_and_std_averages(df)
+    df = generate_opponent_avg_fantasy_points(df)
+    df = generate_opponent_avg_fantasy_points_with_rolling(df)
 
     df.to_csv('data/processed/features.csv', index=False)
     df.to_sql('features', engine, if_exists='replace', index=False)
+
+    qb_df, rb_df, wr_df, te_df = split_features_by_position(df, engine)
+
     print("Feature engineering completed successfully!")
     logging.info('Feature engineering pipeline completed successfully.')
-    
+
 if __name__ == "__main__":
     main()

@@ -4,7 +4,7 @@ def add_season_to_date_aggregates(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds season-to-date aggregates (excluding current week) for fantasy points, targets, and carries.
     """
-    print
+    print('Adding season-to-date aggregates...')
     df = df.sort_values(by=["player_id", "season", "week"])
     
     def compute_season_to_date(df: pd.DataFrame, col_name: str) -> pd.Series:
