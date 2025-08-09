@@ -1,5 +1,6 @@
 season,week,position,mae,r2,model_name,params
-2024,16,qb,1.6040185789447845,0.9319878554168493,qb_model_season2024_week16_20250808202113.pkl,"{'colsample_bytree': 1.0, 'learning_rate': 0.01, 'max_depth': 3, 'n_estimators': 863, 'subsample': 1.0}"
-2024,16,wr,0.1295306925225048,0.9969152411645102,wr_model_season2024_week16_20250808204319.pkl,"{'colsample_bytree': 1.0, 'learning_rate': 0.01, 'max_depth': 4, 'n_estimators': 889, 'subsample': 1.0}"
-2024,16,rb,0.4193479000566862,0.9918661922775244,rb_model_season2024_week16_20250808204805.pkl,"{'colsample_bytree': 0.9039304227217826, 'learning_rate': 0.014101465236166405, 'max_depth': 3, 'n_estimators': 1000, 'subsample': 1.0}"
-2024,16,te,0.1381795760307272,0.9868677716886826,te_model_season2024_week16_20250808205133.pkl,"{'colsample_bytree': 0.9689757829409653, 'learning_rate': 0.014102968780167527, 'max_depth': 3, 'n_estimators': 1000, 'subsample': 1.0}"
+2024,16,qb,4.552567909992103,0.383452362226847,qb_model_season2024_week16_20250809002639.pkl,"{'colsample_bytree': 0.5, 'learning_rate': 0.01, 'max_depth': 9, 'n_estimators': 853, 'subsample': 0.7088329438151357}"
+2024,16,qb,4.552567909992103,0.383452362226847,qb_model_season2024_week16_20250809003642.pkl,"{'colsample_bytree': 0.5, 'learning_rate': 0.01, 'max_depth': 9, 'n_estimators': 853, 'subsample': 0.7088329438151357}"
+2024,16,wr,2.716752242725507,0.4868529708850798,wr_model_season2024_week16_20250809004138.pkl,"{'colsample_bytree': 1.0, 'learning_rate': 0.03808940654211473, 'max_depth': 3, 'n_estimators': 237, 'subsample': 1.0}"
+2024,16,rb,3.746740240298021,0.5673279849436664,rb_model_season2024_week16_20250809004434.pkl,"{'colsample_bytree': 0.915743789842222, 'learning_rate': 0.01661642611452268, 'max_depth': 3, 'n_estimators': 579, 'subsample': 0.8053203732345976}"
+2024,16,te,1.8352911082364745,0.48608395923540315,te_model_season2024_week16_20250809004712.pkl,"{'colsample_bytree': 1.0, 'learning_rate': 0.014337795133968663, 'max_depth': 3, 'n_estimators': 601, 'subsample': 1.0}"

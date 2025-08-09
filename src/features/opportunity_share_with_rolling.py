@@ -1,7 +1,7 @@
 import pandas as pd
 
-# Compute total team opportunities per week
 def generate_opportunity_share_features(features_df):
+    # Calculate team carries and targets per week
     team_opps = (
         features_df.groupby(["team_abbreviation", "season", "week"])[["carries", "targets"]]
         .sum()
@@ -10,24 +10,26 @@ def generate_opportunity_share_features(features_df):
     )
     team_opps["team_total_opps"] = team_opps["team_carries"] + team_opps["team_targets"]
 
-    # Merge team totals into features_df
+    # Shift team_total_opps by 1 week so that current week value is never used
+    team_opps["team_total_opps_lag1"] = (
+        team_opps.sort_values(["team_abbreviation", "season", "week"])
+        .groupby(["team_abbreviation", "season"])["team_total_opps"]
+        .shift(1)
+    )
+
+    # Merge lagged team totals into player-level dataframe
     features_df = features_df.merge(
-        team_opps[["team_abbreviation", "season", "week", "team_total_opps"]],
+        team_opps[["team_abbreviation", "season", "week", "team_total_opps_lag1"]],
         on=["team_abbreviation", "season", "week"],
         how="left"
     )
 
-    # Compute current week opportunity share
-    features_df["opportunity_share"] = (features_df["carries"] + features_df["targets"]) / features_df["team_total_opps"]
-
-    # Lag opportunity share by one week per player/season
+    # Calculate opportunity share from lagged team totals (avoiding current week data)
     features_df["opportunity_share_lag1"] = (
-        features_df.sort_values(["player_id", "season", "week"])
-        .groupby(["player_id", "season"])["opportunity_share"]
-        .shift(1)
+        (features_df["carries"] + features_df["targets"]) / features_df["team_total_opps_lag1"]
     )
 
-    # Adding in rolling averages for opportunity share
+    # Rolling averages (all based on lagged values)
     features_df["opportunity_share_3wk_avg"] = (
         features_df.groupby(["player_id", "season"])["opportunity_share_lag1"]
         .transform(lambda x: x.rolling(window=3, min_periods=3).mean())
@@ -42,7 +44,5 @@ def generate_opportunity_share_features(features_df):
         features_df.groupby(["player_id", "season"])["opportunity_share_lag1"]
         .transform(lambda x: x.expanding().mean())
     )
-
-    features_df.drop(columns = ['opportunity_share'], inplace = True)
 
     return features_df

@@ -15,6 +15,7 @@ def main():
     DATABASE_URL = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
     engine = create_engine(DATABASE_URL)
 
+    # Generate features with helper functions
     df = generate_base_features(engine)
     df = add_season_to_date_aggregates(df)
     df = add_3wk_rolling_averages(df)
@@ -22,6 +23,11 @@ def main():
     df = add_home_away_rolling_and_std_averages(df)
     df = generate_opponent_avg_fantasy_points(df)
     df = generate_opponent_avg_fantasy_points_with_rolling(df)
+
+    # Drop features to resolve data leakage
+    leaky_columns = ['attempts', 'completions', 'target_share', 'passing_yards', 'passing_tds', 'targets', 'receptions', 'carries',
+                    'rushing_yards', 'rushing_tds', 'receiving_yards', 'receiving_tds']
+    df = df.drop(columns = leaky_columns)
 
     df.to_csv('data/processed/features.csv', index=False)
     df.to_sql('features', engine, if_exists='replace', index=False)

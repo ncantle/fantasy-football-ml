@@ -7,10 +7,11 @@ def train_models(season, week, position=None):
         for position in ['qb', 'wr', 'rb', 'te']:
             print(f'Training {position} model...')
             start = time.time()
-            model(season, week, position)
+            metrics = model(season, week, position)
             end = time.time()
             print(f"Training of {position} model completed in {end - start:.2f} seconds.")
             print('')
+            print(metrics)
             print('')
     else:
         print(f'Training {position} model...')

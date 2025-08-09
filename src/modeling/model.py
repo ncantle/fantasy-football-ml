@@ -240,6 +240,8 @@ def model(season, week, position):
     else:
         print("Model not saved since it did not improve over the best existing model.")
 
+    return metrics
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=f"Train all 4 position model for a given season/week.")
     parser.add_argument("--season", type=int, required=True, help="Season year, e.g., 2023")
