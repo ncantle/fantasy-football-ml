@@ -127,22 +127,6 @@ def train_model(train_df, features):
     return best_model, best_params
 
 
-# def train_model(train_df, features):
-#     print("Training XGBoost model...")
-#     """Train an XGBoost regression model."""
-#     model = XGBRegressor(
-#         n_estimators=500,
-#         learning_rate=0.05,
-#         max_depth=6,
-#         subsample=0.8,
-#         colsample_bytree=0.8,
-#         random_state=42,
-#         enable_categorical=True
-#     )
-#     model.fit(train_df[features], train_df[TARGET])
-#     return model
-
-
 def evaluate_model(model,
                    X_train,
                    y_train,

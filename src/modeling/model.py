@@ -15,19 +15,21 @@ pd.set_option('mode.chained_assignment', None)
 # ------------------------
 # CONFIG
 # ------------------------
-POSITION = 'wr'
-MODEL_DIR = "models"
-TABLE_NAME = f"{POSITION}_features"
-TARGET = "fantasy_points"
-EXCLUDE_COLS = ["player_id", "player_name", "season", "week", "player_display_name", "position", "team_abbreviation", TARGET]
+def set_config(position):
+    POSITION = position
+    MODEL_DIR = "models"
+    TABLE_NAME = f"{POSITION}_features"
+    TARGET = "fantasy_points"
+    EXCLUDE_COLS = ["player_id", "player_name", "season", "week", "player_display_name", "position", "team_abbreviation", TARGET]
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "models")
-LOG_DIR = os.path.join(BASE_DIR, "./model_logs")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    MODEL_DIR = os.path.join(BASE_DIR, "models")
+    LOG_DIR = os.path.join(BASE_DIR, "./model_logs")
+    return POSITION, MODEL_DIR, TABLE_NAME, TARGET, EXCLUDE_COLS, LOG_DIR
 # ------------------------
 # FUNCTIONS
 # ------------------------
-def load_data():
+def load_data(TABLE_NAME):
     print('Loading data from database...')
     load_dotenv()
     DATABASE_URL = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
@@ -48,7 +50,7 @@ def train_test_split_for_week(df, season, week):
     return train_df, test_df
 
 
-def get_features(df, train_df, test_df):
+def get_features(df, train_df, test_df, EXCLUDE_COLS, TARGET):
     print("Selecting features and handling data types...")
     """Select feature columns dynamically and handle categorical/bool types automatically."""
     features = [col for col in df.columns if col not in EXCLUDE_COLS]
@@ -118,7 +120,7 @@ def bayes_hyperparameter_tuning(X_train, y_train):
     return opt.best_estimator_, opt.best_params_
 
 
-def train_model(train_df, features):
+def train_model(train_df, features, TARGET):
     print("Training XGBoost model with Bayesian hyperparameter tuning...")
     X_train = train_df[features]
     y_train = train_df[TARGET]
@@ -135,8 +137,8 @@ def evaluate_model(model,
                    season,
                    week,
                    best_params,
-                   position=POSITION,
-                   log_dir=LOG_DIR,
+                   POSITION,
+                   LOG_DIR,
                    log_file="metrics_logs.csv",
                    model_name=None):
     """Evaluate the model, log metrics, and decide whether to save it."""
@@ -155,7 +157,7 @@ def evaluate_model(model,
     metrics = {
         "season": season,
         "week": week,
-        "position": position,
+        "position": POSITION,
         "rmse_train": np.sqrt(mean_squared_error(y_train, y_pred_train)),
         "mae_train": mean_absolute_error(y_train, y_pred_train),
         "r2_train": r2_score(y_train, y_pred_train),
@@ -168,8 +170,8 @@ def evaluate_model(model,
     }
 
     # Ensure logging directory exists
-    os.makedirs(log_dir, exist_ok=True)
-    log_path = os.path.join(log_dir, log_file)
+    os.makedirs(LOG_DIR, exist_ok=True)
+    log_path = os.path.join(LOG_DIR, log_file)
 
     # Create or load existing log
     if os.path.exists(log_path):
@@ -181,13 +183,13 @@ def evaluate_model(model,
     matching_logs = logs[
         (logs["season"] == season) &
         (logs["week"] == week) &
-        (logs["position"] == position)
+        (logs["position"] == POSITION)
     ]
 
     # Save model if first run OR better performance
     save_model_flag = False
     if matching_logs.empty:
-        print(f"No prior runs for {season} Week {week} {position} — saving model.")
+        print(f"No prior runs for {season} Week {week} {POSITION} — saving model.")
         save_model_flag = True
     else:
         best_mae = matching_logs["mae"].min()
@@ -201,7 +203,7 @@ def evaluate_model(model,
     new_row = pd.DataFrame([{
         "season": season,
         "week": week,
-        "position": position,
+        "position": POSITION,
         "mae": metrics['mae_test'],
         "r2": metrics['r2_test'],
         "model_name": model_name,
@@ -213,7 +215,7 @@ def evaluate_model(model,
     return metrics, save_model_flag
 
 
-def save_model(model, filename=None):
+def save_model(model, MODEL_DIR, POSITION, filename=None):
     if filename is None:
         filename = f"{POSITION}_model_{datetime.now().strftime('%Y%m%d%H%M%S')}.pkl"
     print(f"Saving model to {filename}...")
@@ -223,24 +225,25 @@ def save_model(model, filename=None):
     print(f"Model saved to {path}")
 
 
-def wr_model(season, week):
-    df = load_data()
+def model(season, week, position):
+    POSITION, MODEL_DIR, TABLE_NAME, TARGET, EXCLUDE_COLS, LOG_DIR = set_config(position)
+    df = load_data(TABLE_NAME)
     train_df, test_df = train_test_split_for_week(df, season=season, week=week)
-    features, X_train, y_train, X_test, y_test = get_features(df, train_df, test_df)
-    model, best_params = train_model(train_df, features)
+    features, X_train, y_train, X_test, y_test = get_features(df, train_df, test_df, EXCLUDE_COLS, TARGET)
+    model, best_params = train_model(train_df, features, TARGET)
     
-    metrics, save_model_flag= evaluate_model(model, X_train, y_train, X_test, y_test, season, week, best_params)
+    metrics, save_model_flag= evaluate_model(model, X_train, y_train, X_test, y_test, season, week, best_params, POSITION, LOG_DIR)
 
     if save_model_flag:
         print("Saving model...")
-        save_model(model, f"{POSITION}_model_season{season}_week{week}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pkl")
+        save_model(model, MODEL_DIR, POSITION, f"{POSITION}_model_season{season}_week{week}.pkl")
     else:
         print("Model not saved since it did not improve over the best existing model.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=f"Train {POSITION} model for a given season/week.")
+    parser = argparse.ArgumentParser(description=f"Train all 4 position model for a given season/week.")
     parser.add_argument("--season", type=int, required=True, help="Season year, e.g., 2023")
     parser.add_argument("--week", type=int, required=True, help="Week number, e.g., 8")
     
     args = parser.parse_args()
-    wr_model(args.season, args.week)
+    model(args.season, args.week, position)
