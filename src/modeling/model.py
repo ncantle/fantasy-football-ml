@@ -12,9 +12,7 @@ from skopt import BayesSearchCV
 from skopt.space import Real, Integer
 pd.set_option('mode.chained_assignment', None)
 
-# ------------------------
-# CONFIG
-# ------------------------
+
 def set_config(position):
     POSITION = position
     MODEL_DIR = "models"
@@ -26,9 +24,8 @@ def set_config(position):
     MODEL_DIR = os.path.join(BASE_DIR, "models")
     LOG_DIR = os.path.join(BASE_DIR, "./model_logs")
     return POSITION, MODEL_DIR, TABLE_NAME, TARGET, EXCLUDE_COLS, LOG_DIR
-# ------------------------
-# FUNCTIONS
-# ------------------------
+
+
 def load_data(TABLE_NAME):
     print('Loading data from database...')
     load_dotenv()
@@ -246,6 +243,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=f"Train all 4 position model for a given season/week.")
     parser.add_argument("--season", type=int, required=True, help="Season year, e.g., 2023")
     parser.add_argument("--week", type=int, required=True, help="Week number, e.g., 8")
+    parser.add_argument("--position", type=str, required=False, help='Position to build model for: qb, wr, rb, or te.')
     
     args = parser.parse_args()
-    model(args.season, args.week, position)
+    model(args.season, args.week, args.position)
